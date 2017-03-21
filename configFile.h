@@ -4,7 +4,6 @@
 #include <fstream>
 using namespace std;
 
-template <typename T>
 class configFile {
 	
 	public:
@@ -16,16 +15,21 @@ class configFile {
 		string get_SITE_FILE();
 
 	private:
-		int PERIOD_FETCH = 180;
-		int NUM_FETCH = 1;
-		int NUM_PARSE = 1;
-		string SEARCH_FILE = "Search.txt";
-		string SITE_FILE = "Sites.txt";
+		int PERIOD_FETCH;
+		int NUM_FETCH;
+		int NUM_PARSE;
+		string SEARCH_FILE;
+		string SITE_FILE;
 		vector<string> allFiles;
 		 
 };
 
-getFileInfo::getFileInfo (string s) {
+configFile::configFile (string s) {
+        PERIOD_FETCH = 180;
+        NUM_FETCH = 1;
+        NUM_PARSE = 1;
+        SEARCH_FILE = "Search.txt";
+        SITE_FILE = "Sites.txt";
 	
 }
 

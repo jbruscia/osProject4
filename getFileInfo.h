@@ -1,13 +1,13 @@
 #include <iostream>
+#include <stdio.h>
 #include <vector>
 #include <string>
 #include <fstream>
 using namespace std;
 
-template <typename T>
 class getFileInfo {
 	
-	public:
+        public:
 		getFileInfo(string = "default");
 
 	private:
@@ -21,7 +21,7 @@ getFileInfo::getFileInfo (string s) {
 	
 	FILE *fp;
 	char str[100];
-	fp = fopen(fileName,"r");
+	fp = fopen(fileName.c_str(), "r");
 	while(fgets(str,100,fp)!= NULL){
 		allFiles.push_back(str);
 	}
