@@ -7,8 +7,9 @@ using namespace std;
 
 class getFileInfo {
 	
-        public:
+    public:
 		getFileInfo(string = "default");
+		vector<string> getVector(){return allfiles};
 
 	private:
 		string fileName;

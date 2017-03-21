@@ -8,11 +8,11 @@ class configFile {
 	
 	public:
 		configFile(string = "default");
-		int get_PERIOD_FETCH();
-		int get_NUM_FETCH();
-		int get_NUM_PARSE();
-		string get_SEARCH_FILE();
-		string get_SITE_FILE();
+		int get_PERIOD_FETCH(){return PERIOD_FETCH};
+		int get_NUM_FETCH(){return NUM_FETCH};
+		int get_NUM_PARSE(){return NUM_PARSE};
+		string get_SEARCH_FILE(){return SERACH_FILE};
+		string get_SITE_FILE(){return SITE_FILE};
 
 	private:
 		int PERIOD_FETCH;
@@ -21,6 +21,7 @@ class configFile {
 		string SEARCH_FILE;
 		string SITE_FILE;
 		vector<string> allFiles;
+		string fileName;
 		 
 };
 
@@ -30,7 +31,29 @@ configFile::configFile (string s) {
         NUM_PARSE = 1;
         SEARCH_FILE = "Search.txt";
         SITE_FILE = "Sites.txt";
+        
+        fileName = s;
+        FILE *fp;
+		char str[100];
+		fp = fopen(fileName.c_str(), "r");
+		while(fgets(str,100,fp)!= NULL){
+			if(strncmp("PERIOD_FETCH",str,12) == 0) {
+				PERIOD_FETCH = stoi(str[12].c_str());
+			} else if(strncmp("NUM_FETCH", str, 9) == 0) {
+				NUM_FETCH = stoi(str[9].c_str());
+			} else if(strncmp("NUM_PARSE", str, 9) == 0) {
+				NUM_PARSE = stoi(str[9].c_str());
+			} else if(strncmp("SEARCH_FILE", str, 11) == 0) {
+				SEARCH_FILE = str;
+			} else if(strncmp("SITE_FILE", str, 9) == 0) {
+				SITE_FILE = str;
+			}else {
+				//error handling
+			}
+		}
+		fclose(fp);
 	
 }
+
 
 

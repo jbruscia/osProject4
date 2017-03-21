@@ -8,4 +8,7 @@ using namespace std;
 int main(){
     configFile configTmp;
     getFileInfo getTmp;
+    
+    
+    
 }
