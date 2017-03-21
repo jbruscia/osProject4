@@ -9,7 +9,7 @@ class getFileInfo {
 	
     public:
 		getFileInfo(string = "default");
-		vector<string> getVector(){return allfiles};
+		vector<string> getVector(){return allFiles;}
 
 	private:
 		string fileName;
