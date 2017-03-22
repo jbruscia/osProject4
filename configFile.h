@@ -37,7 +37,7 @@ configFile::configFile (string s) {
         SITE_FILE = "Sites.txt";
         
         fileName = s;
-        FILE *fp;
+        /*FILE *fp;
 		char str[100];
 		fp = fopen(fileName.c_str(), "r");
 		while(fgets(str,100,fp)!= NULL){
@@ -62,6 +62,27 @@ configFile::configFile (string s) {
 			}
 		}
 		fclose(fp);
+		*/
+		string tmp;
+		ifstream myfile(fileName.c_str());
+		if(myfile.good()){
+		    while(getline(myfile, tmp)){
+		        if (tmp.compare(0,12,"PERIOD_FETCH") == 0) {
+		        	PERIOD_FETCH = atoi(tmp.substr(13).c_str());
+		        } else if (tmp.compare(0,9,"NUM_FETCH") == 0) {
+		        	NUM_FETCH = atoi(tmp.substr(10).c_str());
+		        } else if ( tmp.compare(0,9,"NUM_PARSE") == 0) {
+		        	NUM_PARSE = atoi(tmp.substr(10).c_str());
+		        } else if (tmp.compare(0,11,"SEARCH_FILE") == 0) {
+		        	SEARCH_FILE = tmp.substr(12);
+		        } else if (tmp.compare(0,9,"SITE_FILE") == 0) {
+		        	SITE_FILE = tmp.substr(10);
+		        } else {
+		        
+		        }
+		    }
+		}
+		myfile.close();
 	
 }
 
