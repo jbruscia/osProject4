@@ -10,7 +10,7 @@ using namespace std;
 class configFile {
 	
 	public:
-		configFile(string = "default");
+		configFile(string = "Config.txt");
 		int get_PERIOD_FETCH(){return PERIOD_FETCH;}
 		int get_NUM_FETCH(){return NUM_FETCH;}
 		int get_NUM_PARSE(){return NUM_PARSE;}
@@ -53,9 +53,9 @@ configFile::configFile (string s) {
 				strncpy(str2, str+9, sizeof(str2));
 				NUM_PARSE = atoi(str2);
 			} else if(strncmp("SEARCH_FILE", str, 11) == 0) {
-				SEARCH_FILE = str;
+				SEARCH_FILE = str+12;
 			} else if(strncmp("SITE_FILE", str, 9) == 0) {
-				SITE_FILE = str;
+				SITE_FILE = str+10;
 			}else {
 				//error handling
 			}

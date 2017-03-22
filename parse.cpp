@@ -10,11 +10,11 @@ int countPhrase(string page, string phrase) {
 	int found;
 	int count = 0;
 	found = page.find(phrase);
-	cout << found << endl;
+	//cout << found << endl;
 	while(found != -1) {
 		count++;
 		found = page.find(phrase, found+phrase.size());
-		cout << found << endl;
+		//cout << found << endl;
 	}
 	return count;
 }
@@ -23,7 +23,7 @@ int main(){
     //configFile configTmp;
     //getFileInfo getTmp;
     
-    cout << countPhrase("Thlskdfjlkit", "kd") << endl;
+    cout << countPhrase("Thlskdfjkdlkitkdkd", "kd") << endl;
     
     
 }
