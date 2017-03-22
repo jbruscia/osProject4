@@ -25,6 +25,7 @@ class configFile {
 		string SITE_FILE;
 		vector<string> allFiles;
 		string fileName;
+                //commetn
 		 
 };
 
