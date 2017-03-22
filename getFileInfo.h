@@ -3,17 +3,20 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <deque>
+
+
 using namespace std;
 
 class getFileInfo {
 	
     public:
 		getFileInfo(string = "default");
-		vector<string> getVector(){return allFiles;}
+		deque<string> getDeque(){return allFiles;}
 
 	private:
 		string fileName;
-		vector<string> allFiles;
+		deque<string> allFiles;
 		 
 };
 
