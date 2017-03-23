@@ -24,6 +24,7 @@ struct parseInfo {
 };
 char bKeepLooping = 1;
 int countPhrase(string page, string phrase);
+void printToFile(string &);
 void populateFetch(int a);
 void handler(int a) {
 	bKeepLooping = 0;
@@ -150,8 +151,9 @@ void * threadParse(void * pData) {
                         strftime(buf, 80, "%I:%M:%S%p", timeinfo);
                         batch_data.append(buf).append(",").append(allPhrases[i]).append(",").append(p.siteURL).append(",").append(to_string(pcount)).append("\n");
 			//cout << p.time << ", " << allPhrases[i] << ", " << p.siteURL << ", " << pcount << endl;
-                        cout << batch_data;
-                        batch_data = "";
+                        //cout << batch_data;
+                        //batch_data = "";
+                        printToFile(batch_data);
 		}
 		waiting = 0;
 	}
@@ -160,6 +162,16 @@ void * threadParse(void * pData) {
 /*void * threadPrint(void * pData) {
 	
 }*/
+
+void printToFile(string &s){
+    string fileName = to_string(batch_count).append(".csv");
+    ofstream outputFile(fileName);
+    outputFile << s;
+    outputFile.close();
+    s = "";
+    batch_count++;
+    cout << "written!" << endl;
+}
 
 int countPhrase(string page, string phrase) {
 	int found;
