@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <time.h>
+#include <string>
 #include <iostream>
 #include "configFile.h"
 #include "getFileInfo.h"
@@ -28,6 +30,8 @@ void handler(int a) {
 }
 void * threadFetch(void * pData);
 void * threadParse(void * pData);
+int batch_count = 1;
+string batch_data = "";
 deque<string>  fetchQueue;
 deque<string>  fullDeque;
 deque<string>  allPhrases;
@@ -129,6 +133,9 @@ void * threadParse(void * pData) {
 	//unlock parse que and signal?
 	//call countPhrases for each phrase in phrases
 	//write to file (need date/time, phrase, site, and count)
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buf[80];
 	int pcount = 0;
 	while (1) {
 		while (parseQueue.size() == 0) {
@@ -138,7 +145,13 @@ void * threadParse(void * pData) {
 		parseQueue.pop_front();
 		for (int i = 0; i < allPhrases.size(); i += 1) {
 			pcount = countPhrase(p.pageData, allPhrases[i]);
-			cout << p.time << ", " << allPhrases[i] << ", " << p.siteURL << ", " << pcount << endl;
+                        time(&rawtime);
+                        timeinfo = localtime(&rawtime);
+                        strftime(buf, 80, "%I:%M:%S%p", timeinfo);
+                        batch_data.append(buf).append(",").append(allPhrases[i]).append(",").append(p.siteURL).append(",").append(to_string(pcount)).append("\n");
+			//cout << p.time << ", " << allPhrases[i] << ", " << p.siteURL << ", " << pcount << endl;
+                        cout << batch_data;
+                        batch_data = "";
 		}
 		waiting = 0;
 	}
