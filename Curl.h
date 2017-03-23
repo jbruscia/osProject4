@@ -6,6 +6,9 @@
 #include <curl/curl.h>
 using namespace std;
 
+//add timeout if you can't get website data
+//don't exit if bad website
+
 static size_t writeToMemory(void *contents, size_t size, size_t nmemb, void *userp);
 struct Chunk {
         char *mem;
