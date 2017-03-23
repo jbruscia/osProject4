@@ -6,6 +6,9 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <deque>
+
 
 
 
@@ -25,12 +28,13 @@ void handler(int a) {
 }
 void * threadFetch(void * pData);
 void * threadParse(void * pData);
-deque<string> * fetchQueue;
-deque<string> * fullDeque;
-deque<parseInfo> * parseQueue; //should this be a map so you can save the site too?
+deque<string>  fetchQueue;
+deque<string>  fullDeque;
+deque<string>  allPhrases;
+deque<parseInfo> parseQueue;
 configFile conf;
 
-
+int waiting = 1;
 //pdata struct should have the queues
 
 
@@ -46,11 +50,25 @@ int main(){
 	
 	getFileInfo search(conf.get_SEARCH_FILE());
 	getFileInfo site(conf.get_SITE_FILE());
-	*fullDeque = site.getDeque();
+	
+	fullDeque = site.getDeque();
+	allPhrases = search.getDeque();
+	
 	//thread creation here or in while loop?
+	int num_threads = 3;
+	int numPrints = (search.getDeque().size())*(site.getDeque().size());
+	pthread_t *ptr = (pthread_t*)malloc(sizeof(pthread_t)*num_threads);
+	int rc, rf;
+	int x = 0;
+	rc = pthread_create(&ptr[0], NULL, threadFetch, NULL);
+	rf = pthread_create(&ptr[1], NULL, threadParse, NULL);
+	//rd = pthread_create(&ptr[2], NULL, (void*)threadParse, &numPrints);
+	
+	
+	//fetchQueue = fullDeque;
 	while (bKeepLooping) {
+		waiting = 1;
 		count++;
-		Curl c;
 		string raw; string phr;
 		/*
 		cout << site.getDeque()[0] << endl;
@@ -60,46 +78,47 @@ int main(){
 		*/
 		
 		//create output file (iteration number)
-		//if(count == 1) make threads
-		//call threadFetch on the threads
-		//call threadParse on the threads
-			//should pass in a struct that has vector of phrases
+		while (waiting) {
 			
-		//join threads
-		//once all have joined, then signal alarm 
-		//clean up mallocs
-		//how to know when you have finished all tasks you need?
+		}
 		alarm(conf.get_PERIOD_FETCH());
-		
-		//should you be joining and making new threads each time, or using same ones
-		
+		cout << "here tho" << endl;
 	}
-
+	//clean up mallocs
+	free(ptr);
 	return 0;
 }
 
 void populateFetch(int a) {
 	//need to populate the fetch deque with safety, how to do this?
-	*fetchQueue = *fullDeque;
+	cout << "in here" << endl;
+	fetchQueue = fullDeque;
+	
 	//signal producesrs
 }
 
 
 void * threadFetch(void * pData) {
-	/*
-	while (1 or gkeeprunning) {
+	
+	while (1) {
 		//lock Mutex
-		while (fetchQueue.getCount() == 0) {
-			pthread_cond_wait(mutex,cond_var);
+		while (fetchQueue.size() == 0) {
+			//pthread_cond_wait(mutex,cond_var);
 		}
-		string s = fetchQueue.pop();
+		string s = fetchQueue[0];
+		fetchQueue.pop_front();
 		//unlock fetchque mutex
-		string raw = [curl object].fetch([vector]);
+		Curl c;
+		string raw = c.fetch(s);
+		string time = "time to fam";
+		string siteURL = s;
+		parseInfo p = {raw,time,siteURL};
+		parseQueue.push_back(p);
 		//lock parse queue
 		//put data/work item in parse queue
 	}
 	//unlock parse queue(signal or bcast)
-	*/
+	
 	
 	//Q:should this be running continuously??
 }
@@ -110,8 +129,24 @@ void * threadParse(void * pData) {
 	//unlock parse que and signal?
 	//call countPhrases for each phrase in phrases
 	//write to file (need date/time, phrase, site, and count)
+	int pcount = 0;
+	while (1) {
+		while (parseQueue.size() == 0) {
+			
+		}
+		parseInfo p = parseQueue[0];
+		parseQueue.pop_front();
+		for (int i = 0; i < allPhrases.size(); i += 1) {
+			pcount = countPhrase(p.pageData, allPhrases[i]);
+			cout << p.time << ", " << allPhrases[i] << ", " << p.siteURL << ", " << pcount << endl;
+		}
+		waiting = 0;
+	}
 }
 
+/*void * threadPrint(void * pData) {
+	
+}*/
 
 int countPhrase(string page, string phrase) {
 	int found;
