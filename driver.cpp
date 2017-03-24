@@ -67,15 +67,40 @@ int main(){
 	allPhrases = search.getDeque();
 	
 	//thread creation here or in while loop?
-	int num_threads = 3;
+	//int num_threads = 3;
 	//should be safely done
 	batch_total = (search.getDeque().size())*(site.getDeque().size());
-	pthread_t *ptr = (pthread_t*)malloc(sizeof(pthread_t)*num_threads);
+	pthread_t *fetchers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_FETCH());
+        pthread_t *parsers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_PARSE());
+        pthread_t *printer = (pthread_t*)malloc(sizeof(pthread_t));
+
 	int rc, rf, rq;
 	int x = 0;
-	rc = pthread_create(&ptr[0], NULL, threadFetch, NULL);
-	rf = pthread_create(&ptr[1], NULL, threadParse, NULL);
-	rq = pthread_create(&ptr[2], NULL, threadPrint, NULL);
+        //FETCH THREAD CREATIONS
+        for(int i = 0; i < conf.get_NUM_FETCH(); i++){
+            rc = pthread_create(&fetchers[i], NULL, threadFetch, NULL);
+            //error checking insert here
+            if(rc < 0){
+                cout << "threading for the fetchers failed" << endl;
+                exit(1);
+            }
+        }
+        //PARSE THREAD CREATIONS
+        for(int j = 0; j < conf.get_NUM_PARSE(); j++){
+            rf = pthread_create(&parsers[j], NULL, threadParse, NULL);
+            if(rf < 0){
+                cout << "threading for the parsers failed" << endl; 
+                exit(1);
+            }
+        }
+
+	//rc = pthread_create(&ptr[0], NULL, threadFetch, NULL);
+	//rf = pthread_create(&ptr[1], NULL, threadParse, NULL);
+	rq = pthread_create(&printer[0], NULL, threadPrint, NULL);
+        if(rq < 0){
+            cout << "threading failed for printing" << endl;
+            exit(1);
+        }
 	//rd = pthread_create(&ptr[2], NULL, (void*)threadParse, &numPrints);
 	
 	
@@ -99,7 +124,9 @@ int main(){
 		cout << "here tho" << endl;
 	}
 	//join threads, wake up sleeping threads, etc
-	free(ptr);
+        free(parsers);
+        free(fetchers);
+        free(printer);
 	return 0;
 }
 
@@ -135,6 +162,7 @@ void * threadFetch(void * pData) {
 	
 	
 	//Q:should this be running continuously??
+        return 0;
 }
 
 void * threadParse(void * pData) {
@@ -162,6 +190,7 @@ void * threadParse(void * pData) {
 		}
 		waiting = 0;
 	}
+        return 0;
 }
 
 void * threadPrint(void * pData) {
@@ -175,6 +204,7 @@ void * threadPrint(void * pData) {
 		printToFile(batch_data);
 		curr_batch_count = 0;
 	}
+        return 0;
 }
 
 void printToFile(string &s){
