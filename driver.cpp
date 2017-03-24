@@ -39,6 +39,7 @@ void * threadPrint(void * pData);
 int batch_count = 1;
 int batch_total = 0;
 int curr_batch_count = 0;
+int done_printing = 0;
 string batch_data = "";
 deque<string>  fetchQueue;
 deque<string>  fullDeque;
@@ -71,11 +72,10 @@ int main(){
 	//should be safely done
 	batch_total = (search.getDeque().size())*(site.getDeque().size());
 	pthread_t *fetchers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_FETCH());
-        pthread_t *parsers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_PARSE());
-        pthread_t *printer = (pthread_t*)malloc(sizeof(pthread_t));
+    pthread_t *parsers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_PARSE());
+    pthread_t *printer = (pthread_t*)malloc(sizeof(pthread_t));
 
 	int rc, rf, rq;
-	int x = 0;
         //FETCH THREAD CREATIONS
         for(int i = 0; i < conf.get_NUM_FETCH(); i++){
             rc = pthread_create(&fetchers[i], NULL, threadFetch, NULL);
@@ -101,27 +101,16 @@ int main(){
             cout << "threading failed for printing" << endl;
             exit(1);
         }
-	//rd = pthread_create(&ptr[2], NULL, (void*)threadParse, &numPrints);
 	
 	
 	//fetchQueue = fullDeque;
 	while (bKeepLooping) {
-		waiting = 1;
-		count++;
-		//string raw; string phr;
-		/*
-		cout << site.getDeque()[0] << endl;
-		raw = c.fetch(site.getDeque()[0]);
-		phr = search.getDeque()[0];
-		cout << countPhrase(raw,phr) << endl;
-		*/
-		
-		//create output file (iteration number)
-		while (waiting) {
+		done_printing = 1;
+		while (done_printing) {
 			
 		}
 		alarm(conf.get_PERIOD_FETCH());
-		cout << "here tho" << endl;
+		cout << "reset alarm" << endl;
 	}
 	//join threads, wake up sleeping threads, etc
         free(parsers);
@@ -131,10 +120,10 @@ int main(){
 }
 
 void populateFetch(int a) {
-	//need to populate the fetch deque with safety, how to do this?
 	cout << "in here" << endl;
+	//lock mutex
 	fetchQueue = fullDeque;
-	
+	//unlock mutex
 	//signal producesrs
 }
 
@@ -142,7 +131,7 @@ void populateFetch(int a) {
 void * threadFetch(void * pData) {
 	
 	while (tKeepLooping) {
-		//lock Mutex
+		//lock fetch Mutex
 		while (fetchQueue.size() == 0) {
 			//pthread_cond_wait(mutex,cond_var);
 		}
@@ -154,11 +143,11 @@ void * threadFetch(void * pData) {
 		string time = "time to fam";
 		string siteURL = s;
 		parseInfo p = {raw,time,siteURL};
+		//lock parse mutex
 		parseQueue.push_back(p);
-		//lock parse queue
-		//put data/work item in parse queue
+		//signal consumer
+		//unlock parse queue
 	}
-	//unlock parse queue(signal or bcast)
 	
 	
 	//Q:should this be running continuously??
@@ -166,27 +155,37 @@ void * threadFetch(void * pData) {
 }
 
 void * threadParse(void * pData) {
-        time_t rawtime;
-        struct tm * timeinfo;
-        char buf[80];
-		int pcount = 0;
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buf[80];
+	int pcount = 0;
 	while (pKeepLooping) {
+		// lock parse mutex
 		while (parseQueue.size() == 0) {
-			
+			//cond wait	consumer
 		}
 		parseInfo p = parseQueue[0];
 		parseQueue.pop_front();
+		//signal producer
+		//unlock parse mutex
 		for (int i = 0; i < allPhrases.size(); i += 1) {
 			pcount = countPhrase(p.pageData, allPhrases[i]);
-		        time(&rawtime);
-		        timeinfo = localtime(&rawtime);
-		        strftime(buf, 80, "%I:%M:%S%p", timeinfo);
-		        batch_data.append(buf).append(",").append(allPhrases[i]).append(",").append(p.siteURL).append(",").append(to_string(pcount)).append("\n");
-				//cout << p.time << ", " << allPhrases[i] << ", " << p.siteURL << ", " << pcount << endl;
-		        //cout << batch_data;
-		        //batch_data = "";
-		        //printToFile(batch_data);
-		        curr_batch_count++;
+	        time(&rawtime);
+	        timeinfo = localtime(&rawtime);
+	        strftime(buf, 80, "%I:%M:%S%p", timeinfo);
+	        
+	        
+	        //lock dat batch_data
+	        batch_data.append(buf).append(",").append(allPhrases[i]).append(",").append(p.siteURL).append(",").append(to_string(pcount)).append("\n");
+	        //unlock batch_data
+	        
+	        //lock batch count
+	        while(1){
+	        	//cond wait
+	        }
+	        curr_batch_count++;
+	        //signal
+	        //unlock
 		}
 		waiting = 0;
 	}
@@ -197,12 +196,18 @@ void * threadPrint(void * pData) {
 	//cond variable
 	while (pKeepLooping) {
 		
-		
+		//lock batch count
 		while (curr_batch_count < batch_total) {
-	
+			//cond wait on batch count
 		}
+		
+		//lock for done_printing
+		done_printing = 0;
+		//unlock for done_printing
 		printToFile(batch_data);
 		curr_batch_count = 0;
+		
+		//unlock batch count
 	}
         return 0;
 }
