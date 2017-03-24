@@ -11,11 +11,16 @@
 #include <pthread.h>
 #include <deque>
 
-
-
-
 using namespace std;
 
+//mutexes
+pthread_mutex_t fetchlock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t parselock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t printlock = PTHREAD_MUTEX_INITIALIZER;
+
+pthread_cond_t fetchcond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t parsecond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t printcond = PTHREAD_COND_INITIALIZER;
 
 struct parseInfo {
 	string pageData;
@@ -25,14 +30,10 @@ struct parseInfo {
 char bKeepLooping = 1;
 char tKeepLooping = 1;//can all these be the same???
 char pKeepLooping = 1;
+char xKeepLooping = 1;
 int countPhrase(string page, string phrase);
 void printToFile(string &);
 void populateFetch(int a);
-void handler(int a) {
-	bKeepLooping = 0;
-	//need to unwind threads
-	//for loop, wake up threads and join
-}
 void * threadFetch(void * pData);
 void * threadParse(void * pData);
 void * threadPrint(void * pData);
@@ -46,6 +47,15 @@ deque<string>  fullDeque;
 deque<string>  allPhrases;
 deque<parseInfo> parseQueue;
 configFile conf;
+
+void handler(int a) {
+	pKeepLooping = 0;
+	tKeepLooping = 0;
+	bKeepLooping = 0;
+	done_printing = 0;
+	//need to unwind threads
+	//for loop, wake up threads and join
+}
 
 int waiting = 1;
 //pdata struct should have the queues
@@ -67,8 +77,6 @@ int main(){
 	fullDeque = site.getDeque();
 	allPhrases = search.getDeque();
 	
-	//thread creation here or in while loop?
-	//int num_threads = 3;
 	//should be safely done
 	batch_total = (search.getDeque().size())*(site.getDeque().size());
 	pthread_t *fetchers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_FETCH());
@@ -94,8 +102,6 @@ int main(){
             }
         }
 
-	//rc = pthread_create(&ptr[0], NULL, threadFetch, NULL);
-	//rf = pthread_create(&ptr[1], NULL, threadParse, NULL);
 	rq = pthread_create(&printer[0], NULL, threadPrint, NULL);
         if(rq < 0){
             cout << "threading failed for printing" << endl;
@@ -103,7 +109,7 @@ int main(){
         }
 	
 	
-	//fetchQueue = fullDeque;
+	fetchQueue = fullDeque;
 	while (bKeepLooping) {
 		done_printing = 1;
 		while (done_printing) {
@@ -121,32 +127,41 @@ int main(){
 
 void populateFetch(int a) {
 	cout << "in here" << endl;
-	//lock mutex
+	pthread_mutex_lock(&fetchlock);
+	//while(xKeepLooping) {
+	//	pthread_cond_wait(&fetchcond, &fetchlock);
+	//}
+	//pthread_cond_wait(&fetchcond, &fetchlock);
+	//xKeepLooping = 1;
 	fetchQueue = fullDeque;
-	//unlock mutex
-	//signal producesrs
+	pthread_cond_signal(&fetchcond);
+	pthread_mutex_unlock(&fetchlock);
+	
 }
 
 
 void * threadFetch(void * pData) {
 	
 	while (tKeepLooping) {
-		//lock fetch Mutex
+		pthread_mutex_lock(&fetchlock);
 		while (fetchQueue.size() == 0) {
-			//pthread_cond_wait(mutex,cond_var);
+			pthread_cond_wait(&fetchcond,&fetchlock);
 		}
 		string s = fetchQueue[0];
 		fetchQueue.pop_front();
-		//unlock fetchque mutex
+		//xKeepLooping = 0;
+		pthread_cond_signal(&fetchcond);
+		pthread_mutex_unlock(&fetchlock);
 		Curl c;
 		string raw = c.fetch(s);
 		string time = "time to fam";
 		string siteURL = s;
+		
 		parseInfo p = {raw,time,siteURL};
-		//lock parse mutex
+		pthread_mutex_lock(&parselock);
 		parseQueue.push_back(p);
-		//signal consumer
-		//unlock parse queue
+		pthread_cond_signal(&parsecond);
+		pthread_mutex_unlock(&parselock);
 	}
 	
 	
@@ -160,14 +175,14 @@ void * threadParse(void * pData) {
     char buf[80];
 	int pcount = 0;
 	while (pKeepLooping) {
-		// lock parse mutex
+		pthread_mutex_lock(&parselock);
 		while (parseQueue.size() == 0) {
-			//cond wait	consumer
+			pthread_cond_wait(&parsecond,&parselock);
 		}
 		parseInfo p = parseQueue[0];
 		parseQueue.pop_front();
-		//signal producer
-		//unlock parse mutex
+		pthread_cond_signal(&parsecond);
+		pthread_mutex_unlock(&parselock);
 		for (int i = 0; i < allPhrases.size(); i += 1) {
 			pcount = countPhrase(p.pageData, allPhrases[i]);
 	        time(&rawtime);
@@ -175,17 +190,17 @@ void * threadParse(void * pData) {
 	        strftime(buf, 80, "%I:%M:%S%p", timeinfo);
 	        
 	        
-	        //lock dat batch_data
+	        pthread_mutex_lock(&printlock);
 	        batch_data.append(buf).append(",").append(allPhrases[i]).append(",").append(p.siteURL).append(",").append(to_string(pcount)).append("\n");
-	        //unlock batch_data
 	        
 	        //lock batch count
-	        while(1){
+	        //while(1){
 	        	//cond wait
-	        }
+	        //}
 	        curr_batch_count++;
-	        //signal
-	        //unlock
+	        pthread_cond_signal(&printcond);
+	        pthread_mutex_unlock(&printlock);
+
 		}
 		waiting = 0;
 	}
@@ -193,12 +208,11 @@ void * threadParse(void * pData) {
 }
 
 void * threadPrint(void * pData) {
-	//cond variable
 	while (pKeepLooping) {
 		
-		//lock batch count
+		pthread_mutex_lock(&printlock);
 		while (curr_batch_count < batch_total) {
-			//cond wait on batch count
+			pthread_cond_wait(&printcond, &printlock);
 		}
 		
 		//lock for done_printing
@@ -207,7 +221,7 @@ void * threadPrint(void * pData) {
 		printToFile(batch_data);
 		curr_batch_count = 0;
 		
-		//unlock batch count
+		pthread_mutex_unlock(&printlock);
 	}
         return 0;
 }
