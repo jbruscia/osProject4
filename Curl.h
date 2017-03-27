@@ -49,6 +49,7 @@ string Curl::fetch(string site){
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, writeToMemory);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+	curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1);
     res = curl_easy_perform(curl_handle);
     if(res != CURLE_OK){
         cout << "libcurl failed on the following site: " << site << endl;
