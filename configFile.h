@@ -37,42 +37,28 @@ configFile::configFile (string s) {
     SITE_FILE = "Sites.txt";
 
     fileName = s;
-    /*FILE *fp;
-      char str[100];
-      fp = fopen(fileName.c_str(), "r");
-      while(fgets(str,100,fp)!= NULL){
-      if(strncmp("PERIOD_FETCH",str,12) == 0) {
-      char str2[10];
-      strncpy(str2, str+12, sizeof(str2));
-      PERIOD_FETCH = atoi(str2);
-      } else if(strncmp("NUM_FETCH", str, 9) == 0) {
-      char str2[10];
-      strncpy(str2, str+9, sizeof(str2));
-      NUM_FETCH = atoi(str2);
-      } else if(strncmp("NUM_PARSE", str, 9) == 0) {
-      char str2[10];
-      strncpy(str2, str+9, sizeof(str2));
-      NUM_PARSE = atoi(str2);
-      } else if(strncmp("SEARCH_FILE", str, 11) == 0) {
-      SEARCH_FILE = str+12;
-      } else if(strncmp("SITE_FILE", str, 9) == 0) {
-      SITE_FILE = str+10;
-      }else {
-    //error handling
-    }
-    }
-    fclose(fp);
-     */
     string tmp;
     ifstream myfile(fileName.c_str());
     if(myfile.good()){
         while(getline(myfile, tmp)){
             if (tmp.compare(0,12,"PERIOD_FETCH") == 0) {
-                PERIOD_FETCH = atoi(tmp.substr(13).c_str());
+                try {
+                    PERIOD_FETCH = stoi(tmp.substr(13));
+                } catch(exception const & e) {
+                    cout << "error on PERIOD_FETCH: improper input" << endl;
+                }
             } else if (tmp.compare(0,9,"NUM_FETCH") == 0) {
-                NUM_FETCH = atoi(tmp.substr(10).c_str());
+                try {
+                    NUM_FETCH = stoi(tmp.substr(10));
+                } catch(exception const & e) {
+                    cout << "error on NUM_FETCH: improper input" << endl;
+                }
             } else if ( tmp.compare(0,9,"NUM_PARSE") == 0) {
-                NUM_PARSE = atoi(tmp.substr(10).c_str());
+                try {
+                    NUM_PARSE = stoi(tmp.substr(10));
+                } catch (exception const & e) {
+                    cout << "error on NUM_PARSE: improper input" << endl;
+                }
             } else if (tmp.compare(0,11,"SEARCH_FILE") == 0) {
                 SEARCH_FILE = tmp.substr(12);
             } else if (tmp.compare(0,9,"SITE_FILE") == 0) {
