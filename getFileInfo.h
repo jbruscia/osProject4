@@ -31,12 +31,15 @@ getFileInfo::getFileInfo (string s) {
 	}
 	fclose(fp);
         */
-    string tmp;
-    ifstream myfile(fileName.c_str());
-    if(myfile.good()){
-        while(getline(myfile, tmp)){
-            allFiles.push_back(tmp);
+        string tmp;
+        ifstream myfile(fileName.c_str());
+        if(myfile.good()){
+                while(getline(myfile, tmp)){
+                        allFiles.push_back(tmp);
+                }
+        } else {
+                cout << "File cannot be found: " << fileName << endl;
+                exit(1);
         }
-    }
-    myfile.close();
+        myfile.close();
 }

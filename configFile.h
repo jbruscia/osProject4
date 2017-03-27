@@ -78,10 +78,21 @@ configFile::configFile (string s) {
 		        } else if (tmp.compare(0,9,"SITE_FILE") == 0) {
 		        	SITE_FILE = tmp.substr(10);
 		        } else {
-		        
+		                cout << "Unknown parameter: " << tmp << endl; 
 		        }
 		    }
 		}
+                //fix values that might be too high or low; they should be in [1-8]
+                if(NUM_FETCH > 8){
+                        NUM_FETCH = 8;
+                } else if(NUM_FETCH < 1){
+                        NUM_FETCH = 1;
+                }
+                if(NUM_PARSE > 8){
+                        NUM_PARSE = 8;
+                } else if(NUM_PARSE < 1){
+                        NUM_PARSE = 1;
+                }
 		myfile.close();
 	
 }
