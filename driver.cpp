@@ -80,34 +80,33 @@ int main(){
 	//should be safely done
 	batch_total = (search.getDeque().size())*(site.getDeque().size());
 	pthread_t *fetchers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_FETCH());
-    pthread_t *parsers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_PARSE());
-    pthread_t *printer = (pthread_t*)malloc(sizeof(pthread_t));
+        pthread_t *parsers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_PARSE());
+        pthread_t *printer = (pthread_t*)malloc(sizeof(pthread_t));
 
 	int rc, rf, rq;
         //FETCH THREAD CREATIONS
         for(int i = 0; i < conf.get_NUM_FETCH(); i++){
-            rc = pthread_create(&fetchers[i], NULL, threadFetch, NULL);
-            //error checking insert here
-            if(rc < 0){
-                cout << "threading for the fetchers failed" << endl;
-                exit(1);
-            }
+                rc = pthread_create(&fetchers[i], NULL, threadFetch, NULL);
+                //error checking insert here
+                if(rc < 0){
+                        cout << "threading for the fetchers failed" << endl;
+                        exit(1);
+                }
         }
         //PARSE THREAD CREATIONS
         for(int j = 0; j < conf.get_NUM_PARSE(); j++){
-            rf = pthread_create(&parsers[j], NULL, threadParse, NULL);
-            if(rf < 0){
-                cout << "threading for the parsers failed" << endl; 
-                exit(1);
-            }
+                rf = pthread_create(&parsers[j], NULL, threadParse, NULL);
+                if(rf < 0){
+                        cout << "threading for the parsers failed" << endl; 
+                        exit(1);
+                }
         }
 
 	rq = pthread_create(&printer[0], NULL, threadPrint, NULL);
         if(rq < 0){
-            cout << "threading failed for printing" << endl;
-            exit(1);
+                cout << "threading failed for printing" << endl;
+                exit(1);
         }
-	
 	
 	fetchQueue = fullDeque;
 	while (bKeepLooping) {
@@ -170,14 +169,14 @@ void * threadFetch(void * pData) {
 }
 
 void * threadParse(void * pData) {
-    time_t rawtime;
-    struct tm * timeinfo;
-    char buf[80];
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buf[80];
 	int pcount = 0;
 	while (pKeepLooping) {
-		pthread_mutex_lock(&parselock);
+	        pthread_mutex_lock(&parselock);
 		while (parseQueue.size() == 0) {
-			pthread_cond_wait(&parsecond,&parselock);
+		        pthread_cond_wait(&parsecond,&parselock);
 		}
 		parseInfo p = parseQueue[0];
 		parseQueue.pop_front();
@@ -185,22 +184,18 @@ void * threadParse(void * pData) {
 		pthread_mutex_unlock(&parselock);
 		for (int i = 0; i < allPhrases.size(); i += 1) {
 			pcount = countPhrase(p.pageData, allPhrases[i]);
-	        time(&rawtime);
-	        timeinfo = localtime(&rawtime);
-	        strftime(buf, 80, "%I:%M:%S%p", timeinfo);
-	        
-	        
-	        pthread_mutex_lock(&printlock);
-	        batch_data.append(buf).append(",").append(allPhrases[i]).append(",").append(p.siteURL).append(",").append(to_string(pcount)).append("\n");
-	        
-	        //lock batch count
-	        //while(1){
-	        	//cond wait
-	        //}
-	        curr_batch_count++;
-	        pthread_cond_signal(&printcond);
-	        pthread_mutex_unlock(&printlock);
-
+	                time(&rawtime);
+	                timeinfo = localtime(&rawtime);
+	                strftime(buf, 80, "%I:%M:%S%p", timeinfo);
+	                pthread_mutex_lock(&printlock);
+	                batch_data.append(buf).append(",").append(allPhrases[i]).append(",").append(p.siteURL).append(",").append(to_string(pcount)).append("\n");
+	                //lock batch count
+	                //while(1){
+	        	    //cond wait
+	                //}
+	                curr_batch_count++;
+	                pthread_cond_signal(&printcond);
+	                pthread_mutex_unlock(&printlock);
 		}
 		waiting = 0;
 	}
@@ -209,42 +204,37 @@ void * threadParse(void * pData) {
 
 void * threadPrint(void * pData) {
 	while (pKeepLooping) {
-		
 		pthread_mutex_lock(&printlock);
 		while (curr_batch_count < batch_total) {
 			pthread_cond_wait(&printcond, &printlock);
 		}
-		
 		//lock for done_printing
 		done_printing = 0;
 		//unlock for done_printing
 		printToFile(batch_data);
 		curr_batch_count = 0;
-		
 		pthread_mutex_unlock(&printlock);
 	}
         return 0;
 }
 
 void printToFile(string &s){
-    string fileName = to_string(batch_count).append(".csv");
-    ofstream outputFile(fileName);
-    outputFile << s;
-    outputFile.close();
-    s = "";
-    batch_count++;
-    cout << "written!" << endl;
+        string fileName = to_string(batch_count).append(".csv");
+        ofstream outputFile(fileName);
+        outputFile << s;
+        outputFile.close();
+        s = "";
+        batch_count++;
+        cout << "written!" << endl;
 }
 
 int countPhrase(string page, string phrase) {
 	int found;
 	int count = 0;
 	found = page.find(phrase);
-	//cout << found << endl;
 	while(found != -1) {
 		count++;
 		found = page.find(phrase, found+phrase.size());
-		//cout << found << endl;
 	}
 	return count;
 }
