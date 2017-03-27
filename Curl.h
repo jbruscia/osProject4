@@ -11,29 +11,29 @@ using namespace std;
 
 static size_t writeToMemory(void *contents, size_t size, size_t nmemb, void *userp);
 struct Chunk {
-        char *mem;
-        size_t size;
+    char *mem;
+    size_t size;
 };
 
 class Curl {
-        public:
-                Curl(){};
-                string fetch(string);
-        private:
+    public:
+        Curl(){};
+        string fetch(string);
+    private:
 };
 
 static size_t writeToMemory(void *contents, size_t size, size_t nmemb, void *userp){
-        size_t realsize = size * nmemb;
-        struct Chunk *mem = (struct Chunk *)userp;
-        mem->mem = (char*)realloc(mem->mem, mem->size + realsize + 1);
-        if(mem->mem == NULL){
-                cout << "there was not enough memory available: realloc failed\n";
-                return 0;
-        }
-        memcpy(&(mem->mem[mem->size]), contents, realsize);
-        mem->size += realsize;
-        mem->mem[mem->size] = 0;
-        return realsize;
+    size_t realsize = size * nmemb;
+    struct Chunk *mem = (struct Chunk *)userp;
+    mem->mem = (char*)realloc(mem->mem, mem->size + realsize + 1);
+    if(mem->mem == NULL){
+        cout << "there was not enough memory available: realloc failed\n";
+        return 0;
+    }
+    memcpy(&(mem->mem[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->mem[mem->size] = 0;
+    return realsize;
 }
 
 string Curl::fetch(string site){
@@ -50,7 +50,10 @@ string Curl::fetch(string site){
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
     res = curl_easy_perform(curl_handle);
     if(res != CURLE_OK){
-        cout << "curl_easy_perform() failed!" << endl;
+        cout << "libcurl failed on the following site: " << site << endl;
+        curl_easy_cleanup(curl_handle);
+        curl_global_cleanup();
+        return "";
     } else {
         cout << "it might have worked" << endl;
     }
