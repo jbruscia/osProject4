@@ -93,6 +93,9 @@ configFile::configFile (string s) {
                 } else if(NUM_PARSE < 1){
                         NUM_PARSE = 1;
                 }
+                if(PERIOD_FETCH < 1){
+                    PERIOD_FETCH = 180;
+                }
 		myfile.close();
 	
 }
