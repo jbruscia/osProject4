@@ -45,6 +45,7 @@ string Curl::fetch(string site){
     curl_global_init(CURL_GLOBAL_ALL);
     curl_handle = curl_easy_init();
     curl_easy_setopt(curl_handle, CURLOPT_URL, site.c_str());
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, 10L);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, writeToMemory);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
