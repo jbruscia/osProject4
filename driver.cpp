@@ -83,6 +83,8 @@ int main(){
     pthread_t *fetchers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_FETCH());
     pthread_t *parsers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_PARSE());
     pthread_t *printer = (pthread_t*)malloc(sizeof(pthread_t));
+    
+    
 	//create threads
     int rc, rf, rq;
     //FETCH THREAD CREATIONS
@@ -120,6 +122,7 @@ int main(){
         cout << "reset alarm" << endl;
     }
     
+    //have finished main program loop, beginning exiting procedures
     //exit gracefully by joining threads
     for(int i = 0; i < conf.get_NUM_FETCH(); i++){
         rc = pthread_join(fetchers[i], NULL);
@@ -129,7 +132,6 @@ int main(){
             exit(1);
         }
     }
-    
     for(int j = 0; j < conf.get_NUM_PARSE(); j++){
         rf = pthread_join(parsers[j], NULL);
         //error checking
@@ -138,7 +140,6 @@ int main(){
             exit(1);
         }
     }
-    
     rq = pthread_join(printer[0], NULL);
     if(rq < 0){
         cout << "joining failed for printing" << endl;
@@ -152,6 +153,7 @@ int main(){
     return 0;
 }
 
+//function called at alarm that resets parsequeue
 void populateFetch(int a) {
     cout << "in here" << endl;
     pthread_mutex_lock(&fetchlock);
@@ -223,6 +225,7 @@ void * threadParse(void * pData) {
     return 0;
 }
 
+//thread that waits on other threads to finish batch
 void * threadPrint(void * pData) {
     while (pKeepLooping) {
         pthread_mutex_lock(&printlock);
@@ -263,5 +266,4 @@ int countPhrase(string page, string phrase) {
     }
     return count;
 }
-
 
