@@ -1,16 +1,20 @@
 # osProject4
+Group Pair Members: John Bruscia, Luke Duane
+
+To  build the program, simply type 'make'.  Run the executable 'site-tester' without any other command line parameters to begin running the program.  The program will run continuously until the user types control-c.  When control-c is pressed, the active threads will finish their current function and exit.  Whether control-c is entered between batches or during a batch, once it is pressed, no more output files will be created.  The program immediately begins its graceful unwinding.
+
+If you would like to adjust the configuration parameters, you can do so in the file "Config.txt".  The default file for the list of websites to search is located at "Search.txt", and the phrases are located at "Sites.txt".  In the Configuration parameters file, you may change the number of fetch threads in "NUM_FETCH" and the number of parse threads in "NUM_PARSE".  If you modify the thread parameters in "Config.txt" to values greater than 8, the value will be read in as 8.  If you modify the thread parameters to values less than 1, the value will be read in as 1.  If there are more fetch threads or parse threads than there are sites for their respective config parameters, the number of threads used will be capped at the number of sites.  This is done so that extra threads aren't stuck sleeping with no way to exit their function.
 
 
-Things to do:
+In main, the program initiates a timer, populates the fetch queue, creates the threads (n threads for fetchqueue function, n threads for parsequeue function, one thread for printqueue function), and then enters the main loop of the program (begins on line 127).  The program remains in this loop until control-c is entered.  Inside this loop, it immediatiely sets the done_printing variable to 1, which doesn't interfere with the single print thread because the alarm has just been reset.  Once it has been told that there has been a new batch file created (via the done_printing global variable), the main loop resets the alarm.  The printToFile function modifies the done_printing variable when it has succussfully created a new batch output file. This function is called by the single thread running threadPrint, that waits in sleep until it is signaled by one of the threadParse threads.  The threadparse threads signal the print thread whenever a new entry has been added to the global string "batch_data", so that it can check to see if all entries have been appended to the this output string.  If not, it goes back to sleep.  The output string is thread-safe, where only one thread can access the string at a time.
 
-1. Write a useful README that describes how your system works and varios parameters (5%)
-2. Clean up code (watch out for tabbing issues) and add comments if necessary (prolly fucking not though)
-3. Test if we get the configuration parameters correct. This could mean messing around with Config.txt and making sure
-it still works.
-4. Make sure it works when sites have errors (5%)
-5. SIGHUP or nah?
-6. Protection against varios configuration errors. Aka make sure that the ranges given to us are enforced and describe
-how we handle them in the README
-7. Single output file (5%)
-8. Variations on thread settings correctly impact operation (5%)
-0. Successful operation over multiple batches of data (10%)
+
+The Threadparse threads wait until they are signaled by the threadFetch threads.  Once there is something in the parse queue and it is signaled, the threadParse threads will call the CountPhrase function for each phrase specified in the Search.txt file.  It will then thread-safely append these entries onto the main string.
+
+The threadFetch threads wait until they are signaled that the fetchQueue has been populated, which is done in the function populateFetch.  Once it has an item in the queue, the fetch thread will create a Curl object that allows it to use libcurl to fetch the website's data.  It then adds that data to the parse queue and signals the parsers that there is something there.
+
+The populateFetch function is called as the handler for SIGALRM.  Every time the alarm goes off, the function is called, which repopulates the queue and restarts the cycle.
+
+Function "handler", called by SIGINT, simply sets the while-loop variables for the threads and for the main loop to 0, so that they can leave their function once they finish their iteration.  This allows the main program to exit the main loop and begin the joining of the threads.  Once the threads have been joined, the memory allocated for the threads is cleared, and the program is free to exit.
+
+In addition to site-tester, the program uses two three classes: configFile.h, Curl.h, and getFileInfo.h.  configFile creates an object with the config parameters as private variables that can be accessed by get functions.  Curl.h is used to create an object with curl functionality, used to get information from websites.  getFileInfo.h is used to create objects for both the file with url's and the file with phrases.  These objects are used to access the queues that are used for getting the sites and phrases for the rest of the program.
