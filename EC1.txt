@@ -3,4 +3,6 @@ of the frequencies for each of the phrases found on each of the sites. To use it
 graphed (i.e. 1.csv) and click the button. To load another graph, please reload the page and type in another file name.
 The graphs are produced from d3 visualization tools.
 
+The file containing the html is called ec.html
+
 Note: We had to use the most updated version of Firefox for this to work.
