@@ -134,7 +134,7 @@ int main(){
         cout << "reset alarm" << endl;
     }
     
-    //have finished main program loop, beginning exiting procedures
+    //have finished main program loop, begin exit
     //exit gracefully by joining threads
     for(int i = 0; i < maxThreadsFetch; i++){
         rc = pthread_join(fetchers[i], NULL);
