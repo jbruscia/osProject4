@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <regex>
+#include <sstream>
+#include <algorithm>
 #include <time.h>
 #include <string>
 #include <iostream>
@@ -38,11 +41,12 @@ void populateFetch(int a);
 void * threadFetch(void * pData);
 void * threadParse(void * pData);
 void * threadPrint(void * pData);
+string getBody(string);
 int batch_count = 1;
 int batch_total = 0;
 int curr_batch_count = 0;
 int done_printing = 0;
-string batch_data = "";
+string batch_data = "time,phrase,site,count\n";
 deque<string>  fetchQueue;
 deque<string>  fullDeque;
 deque<string>  allPhrases;
@@ -66,7 +70,6 @@ int main(){
     cout << "search file: " << conf.get_SEARCH_FILE() << endl;
     cout << "site file: " << conf.get_SITE_FILE() << endl;
 
-    int count = 0;
     alarm(1);
     signal(SIGINT, handler);
     //need a sighup one too? one above does control c i believe
@@ -191,6 +194,8 @@ void * threadParse(void * pData) {
             timeinfo = localtime(&rawtime);
             strftime(buf, 80, "%I:%M:%S%p", timeinfo);
             pthread_mutex_lock(&printlock);
+            //batch_html.append("{").append("Phrase:").append("\'").append(allPhrases[i]).append(" on
+            //").append(p.siteURL).append("\',").append("freq:{").append(to_string(pcount)).append("}");
             batch_data.append(buf).append(",").append(allPhrases[i]).append(",").append(p.siteURL).append(",").append(to_string(pcount)).append("\n");
             //lock batch count
             //while(1){
@@ -226,18 +231,59 @@ void printToFile(string &s){
     ofstream outputFile(fileName);
     outputFile << s;
     outputFile.close();
-    s = "";
+    s = "time,phrase,site,count\n";
     batch_count++;
     cout << "written!" << endl;
 }
 
+string getBody(string html){
+    vector<string> res;
+    int end = 0, begin = 0;
+    while(begin != -1 ){
+        begin = html.find("<body");
+        end = html.find("</body>");
+        if(begin != -1 && end != -1){
+            res.push_back(html.substr(begin, end));
+        }
+        html = html.substr(end);
+    }
+    string body = "", result = "";
+    for(auto str: res){
+        body.append(str);
+    }
+    res.clear();
+    begin = body.find(">");
+    cout << begin << endl;
+    end = 0;
+    if(begin != -1){
+        while(end != -1){
+            body = body.substr(begin);
+            end = body.find("<");
+            if(end != -1){
+                res.push_back(body.substr(0, end));
+                body = body.substr(end);
+            }
+            begin = body.find(">");
+        }
+        for(auto str: res){
+            result.append(str);
+        }
+
+    } else {
+        return body;
+    }
+    return result;
+}
+
+
 int countPhrase(string page, string phrase) {
+    page = getBody(page);
     int found;
     int count = 0;
     found = page.find(phrase);
     while(found != -1) {
         count++;
-        found = page.find(phrase, found+phrase.size());
+        found = page.find(phrase, found+1);
     }
     return count;
 }
