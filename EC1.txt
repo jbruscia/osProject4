@@ -1,0 +1,6 @@
+For the first extra credit, we created an html file that takes in user input to choose a file and then displays a graph
+of the frequencies for each of the phrases found on each of the sites. To use it, simply type in the file you would like
+graphed (i.e. 1.csv) and click the button. To load another graph, please reload the page and type in another file name.
+The graphs are produced from d3 visualization tools.
+
+Note: We had to use the most updated version of Firefox for this to work.

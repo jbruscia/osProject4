@@ -1,0 +1,2 @@
+To make the code more HTML aware, we utilized the string.find() function to cut out all material except for text not
+within the body tag.
