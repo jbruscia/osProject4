@@ -44,7 +44,7 @@ void * threadPrint(void * pData);
 int batch_count = 1; //tells which batch it is to create correct file
 int batch_total = 0; //how many entries you should have in each file
 int curr_batch_count = 0; // how many current entries have been stored in string
-int done_printing = 0; //when printing has finished
+int done_printing = 1; //when printing has finished
 int ex = 0; // handler changes this to make sure all threads can exit and aren't stuck in while loops
 string batch_data = ""; //string that gets added to file
 deque<string>  fetchQueue; //queue of urls
@@ -77,18 +77,30 @@ int main(){
 	//populate default deques
     fullDeque = site.getDeque();
     allPhrases = search.getDeque();
-
+	
+	//get how many entries should be in each file
     batch_total = (search.getDeque().size())*(site.getDeque().size());
+    //if there are no entries, output error and exit 
+    if(batch_total < 1) {
+    	cout << "There is nothing to be done! Please adjust the Site file and/or Search file" << endl;
+    	exit(1);
+    }
+    
     //declare threads
     pthread_t *fetchers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_FETCH());
     pthread_t *parsers = (pthread_t*)malloc(sizeof(pthread_t)*conf.get_NUM_PARSE());
     pthread_t *printer = (pthread_t*)malloc(sizeof(pthread_t));
     
+    //check to see if there are more threads than there are sites, cap if need be
+    int maxThreadsFetch = conf.get_NUM_FETCH();
+    int maxThreadsParse = conf.get_NUM_PARSE();
+    if(maxThreadsFetch > (int)site.getDeque().size()) maxThreadsFetch = site.getDeque().size();
+	if(maxThreadsParse > (int)site.getDeque().size()) maxThreadsParse = site.getDeque().size();
     
 	//create threads
     int rc, rf, rq;
     //FETCH THREAD CREATIONS
-    for(int i = 0; i < conf.get_NUM_FETCH(); i++){
+    for(int i = 0; i < maxThreadsFetch; i++){
         rc = pthread_create(&fetchers[i], NULL, threadFetch, NULL);
         //error checking
         if(rc < 0){
@@ -97,7 +109,7 @@ int main(){
         }
     }
     //PARSE THREAD CREATIONS
-    for(int j = 0; j < conf.get_NUM_PARSE(); j++){
+    for(int j = 0; j < maxThreadsParse; j++){
         rf = pthread_create(&parsers[j], NULL, threadParse, NULL);
         if(rf < 0){
             cout << "threading for the parsers failed" << endl; 
@@ -124,7 +136,7 @@ int main(){
     
     //have finished main program loop, beginning exiting procedures
     //exit gracefully by joining threads
-    for(int i = 0; i < conf.get_NUM_FETCH(); i++){
+    for(int i = 0; i < maxThreadsFetch; i++){
         rc = pthread_join(fetchers[i], NULL);
         //error checking
         if(rc < 0){
@@ -132,7 +144,7 @@ int main(){
             exit(1);
         }
     }
-    for(int j = 0; j < conf.get_NUM_PARSE(); j++){
+    for(int j = 0; j < maxThreadsParse; j++){
         rf = pthread_join(parsers[j], NULL);
         //error checking
         if(rf < 0){
