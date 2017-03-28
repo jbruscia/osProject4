@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <regex>
+#include <sstream>
+#include <algorithm>
 #include <time.h>
 #include <string>
 #include <iostream>
@@ -41,6 +44,7 @@ void populateFetch(int a);
 void * threadFetch(void * pData);
 void * threadParse(void * pData);
 void * threadPrint(void * pData);
+string getBody(string);
 int batch_count = 1; //tells which batch it is to create correct file
 int batch_total = 0; //how many entries you should have in each file
 int curr_batch_count = 0; // how many current entries have been stored in string
@@ -51,6 +55,7 @@ deque<string>  fetchQueue; //queue of urls
 deque<string>  fullDeque; //the full queue of urls that fetchQueue gets rest to for new batch
 deque<string>  allPhrases; //queue of all phrases
 deque<parseInfo> parseQueue; //queue of text from website
+
 configFile conf;
 
 void handler(int a) {
@@ -67,6 +72,7 @@ void handler(int a) {
 int main(){
     //cout << "search file: " << conf.get_SEARCH_FILE() << endl;
     //cout << "site file: " << conf.get_SITE_FILE() << endl;
+
 
     alarm(1); //populate parse queue for the first time to initialize program
     signal(SIGINT, handler); //exit with control-c
@@ -272,8 +278,48 @@ void printToFile(string &s){
     batch_count++;
 }
 
+string getBody(string html){
+    vector<string> res;
+    int end = 0, begin = 0;
+    while(begin != -1 ){
+        begin = html.find("<body");
+        end = html.find("</body>");
+        if(begin != -1 && end != -1){
+            res.push_back(html.substr(begin, end));
+        }
+        html = html.substr(end);
+    }
+    string body = "", result = "";
+    for(auto str: res){
+        body.append(str);
+    }
+    res.clear();
+    begin = body.find(">");
+    cout << begin << endl;
+    end = 0;
+    if(begin != -1){
+        while(end != -1){
+            body = body.substr(begin);
+            end = body.find("<");
+            if(end != -1){
+                res.push_back(body.substr(0, end));
+                body = body.substr(end);
+            }
+            begin = body.find(">");
+        }
+        for(auto str: res){
+            result.append(str);
+        }
+
+    } else {
+        return body;
+    }
+    return result;
+}
+
 //function to count number of occurrences of phrase in larger string
 int countPhrase(string page, string phrase) {
+    page = getBody(page);
     int found;
     int count = 0;
     found = page.find(phrase);

@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Extra Credit Option 1</title>
+    <script src="http://d3js.org/d3.v4.min.js"></script>
+</head>
+<body>
+<input type="text" id="filename">
+</body>
+
+<body>
+<button id="btn"> Choose this file! </button>
+    <script>
+    var file;
+    document.getElementById('btn').onclick = function () {
+        file = document.getElementById('filename').value;
+        console.log(file);
+        graph(file);
+    }
+
+    function graph(file) {
+        d3.csv(file, function (data) {
+            var site = d3.select("body").append("svg").attr("width", 5000).attr("height",5000);
+            site.selectAll("rect")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("width", function (item) { return item.count;})
+                .attr("height", 48)
+                .attr("y", function (item, i) { return i * 50; })
+                .attr("fill", "green");
+
+            site.selectAll("text")
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("fill", "black")
+                .attr("y", function (item, i) { return i * 50 + 24; })
+                .text(function (item) { return item.phrase + "'s on " + item.site + ": " + item.count;}) 
+            
+        }); 
+    }
+    </script>
+</body>
+
+</html>
