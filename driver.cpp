@@ -295,7 +295,6 @@ string getBody(string html){
     }
     res.clear();
     begin = body.find(">");
-    cout << begin << endl;
     end = 0;
     if(begin != -1){
         while(end != -1){
