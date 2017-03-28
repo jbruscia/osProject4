@@ -70,8 +70,6 @@ void handler(int a) {
 }
 
 int main(){
-    //cout << "search file: " << conf.get_SEARCH_FILE() << endl;
-    //cout << "site file: " << conf.get_SITE_FILE() << endl;
 
 
     alarm(1); //populate parse queue for the first time to initialize program
@@ -295,7 +293,6 @@ string getBody(string html){
     }
     res.clear();
     begin = body.find(">");
-    cout << begin << endl;
     end = 0;
     if(begin != -1){
         while(end != -1){
