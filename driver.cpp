@@ -46,7 +46,7 @@ int batch_total = 0; //how many entries you should have in each file
 int curr_batch_count = 0; // how many current entries have been stored in string
 int done_printing = 1; //when printing has finished
 int ex = 0; // handler changes this to make sure all threads can exit and aren't stuck in while loops
-string batch_data = ""; //string that gets added to file
+string batch_data = "time,phrase,site,count\n"; //string that gets added to file
 deque<string>  fetchQueue; //queue of urls
 deque<string>  fullDeque; //the full queue of urls that fetchQueue gets rest to for new batch
 deque<string>  allPhrases; //queue of all phrases
@@ -65,8 +65,8 @@ void handler(int a) {
 }
 
 int main(){
-    cout << "search file: " << conf.get_SEARCH_FILE() << endl;
-    cout << "site file: " << conf.get_SITE_FILE() << endl;
+    //cout << "search file: " << conf.get_SEARCH_FILE() << endl;
+    //cout << "site file: " << conf.get_SITE_FILE() << endl;
 
     alarm(1); //populate parse queue for the first time to initialize program
     signal(SIGINT, handler); //exit with control-c
@@ -130,8 +130,13 @@ int main(){
         while (done_printing) {
 
         }
-        if(!ex) alarm(conf.get_PERIOD_FETCH()); //reset alarm if not in exit procedure
-        cout << "reset alarm" << endl;
+        if(!ex) {
+        	alarm(conf.get_PERIOD_FETCH()); //reset alarm if not in exit procedure
+        	cout << "Batch completed! New file created and alarm reset." << endl;
+        }
+        else {
+        	cout << "Ending program" << endl;
+        }
     }
     
     //have finished main program loop, begin exit
@@ -165,11 +170,12 @@ int main(){
     return 0;
 }
 
+//additional functions
 //function called at alarm that resets parsequeue
 void populateFetch(int a) {
-    cout << "in here" << endl;
     pthread_mutex_lock(&fetchlock);
     fetchQueue = fullDeque;
+    if(!ex) cout << "New batch started" << endl;
     pthread_cond_signal(&fetchcond);
     pthread_mutex_unlock(&fetchlock);
 
@@ -262,9 +268,8 @@ void printToFile(string &s){
     ofstream outputFile(fileName);
     outputFile << s;
     outputFile.close();
-    s = "";
+    s = "time,phrase,site,count\n";
     batch_count++;
-    cout << "written!" << endl;
 }
 
 //function to count number of occurrences of phrase in larger string

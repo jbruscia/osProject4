@@ -56,10 +56,7 @@ string Curl::fetch(string site){
         curl_easy_cleanup(curl_handle);
         curl_global_cleanup();
         return "";
-    } else {
-        cout << "it might have worked" << endl;
     }
-    cout << "bytes received: " << chunk.size << endl;
     curl_easy_cleanup(curl_handle);
     curl_global_cleanup();
     return chunk.mem;
